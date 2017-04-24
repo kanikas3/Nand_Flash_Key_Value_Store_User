@@ -168,7 +168,7 @@ int kvlib_get(const char *key, char *value)
 
 	/* peprare the keyval structure we will send through IOCTL */
 	kv.key = (char *)malloc((strlen(key) + 1) * sizeof(char));
-	kv.val = (char *)malloc((strlen(value) + 1) * sizeof(char));
+	kv.val = (char *)malloc(4096);
 	sprintf(kv.key, "%s", key);
 	kv.key_len = strlen(key);
 
