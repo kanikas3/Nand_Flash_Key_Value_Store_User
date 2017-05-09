@@ -28,7 +28,7 @@ let sum=64
 let value=$COUNTER*$sum
 let value=value-1
 
-echo "############################ for $COUNTER $value"
+echo "######## Running for $COUNTER blocks #########"
 
 
 if [ "$1" -ne 4 ]; then
@@ -42,5 +42,5 @@ if [ "$1" -eq 4 ]; then
 	./testbench 6 $value $3
 fi
 
-echo "############################"
+echo "#################################################"
 let COUNTER=COUNTER+50 
