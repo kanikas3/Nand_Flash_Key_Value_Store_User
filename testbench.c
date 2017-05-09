@@ -16,7 +16,7 @@
 
 char buffer[LARGE_TEST_SIZE];
 
-static int setMapping(char* key, char* val)
+static int set_key_to_flash(char* key, char* val)
 {
 	int ret=0;
 
@@ -31,7 +31,7 @@ static int setMapping(char* key, char* val)
 	return 0;
 }
 
-static int getMapping(char* key, char* val)
+static int get_key_from_flash(char* key, char* val)
 {
 	int ret=0;
 
@@ -53,7 +53,7 @@ static int getMapping(char* key, char* val)
 	return 0;
 }
 
-static int deleteMapping(char* key)
+static int del_key_from_flash(char* key)
 {
 	int ret = 0;
 
@@ -184,7 +184,7 @@ static int read_write_test(uint64_t num_entries, int large_keys)
 	gettimeofday(&t0,NULL);
 
 	for (i = 0; i < num_entries; i++)
-		setMapping(key_array[i], val_array[i]);
+		set_key_to_flash(key_array[i], val_array[i]);
 
 	gettimeofday(&t1,NULL);
 
@@ -194,7 +194,7 @@ static int read_write_test(uint64_t num_entries, int large_keys)
 	gettimeofday(&t0,NULL);
 
 	for (i=0; i < num_entries; i++) {
-		getMapping(key_array[i], val_array[i]);
+		get_key_from_flash(key_array[i], val_array[i]);
 	}
 
 	gettimeofday(&t1,NULL);
@@ -330,7 +330,7 @@ static int delete_test(uint64_t num_entries, int large_keys)
 	gettimeofday(&t0,NULL);
 
 	for (i = 0; i < num_entries; i++)
-		setMapping(key_array[i], val_array[i]);
+		set_key_to_flash(key_array[i], val_array[i]);
 
 	gettimeofday(&t1,NULL);
 
@@ -340,7 +340,7 @@ static int delete_test(uint64_t num_entries, int large_keys)
 	gettimeofday(&t0,NULL);
 
 	for (i = 0; i < num_entries; i++)
-		deleteMapping(key_array[i]);
+		del_key_from_flash(key_array[i]);
 
 	gettimeofday(&t1,NULL);
 	timeDiff = get_latency(t0,t1, num_entries);
@@ -484,7 +484,7 @@ static int update_test(uint64_t num_entries, int large_keys)
 	gettimeofday(&t0,NULL);
 
 	for (i = 0; i <= num_entries/2; i++)
-		setMapping(key_array[i], val_array[i]);
+		set_key_to_flash(key_array[i], val_array[i]);
 
 	gettimeofday(&t1,NULL);
 
@@ -494,7 +494,7 @@ static int update_test(uint64_t num_entries, int large_keys)
 	gettimeofday(&t0,NULL);
 
 	for (i = num_entries - num_entries/2; i < num_entries; i++)
-		setMapping(key_array[i-num_entries + num_entries/2],
+		set_key_to_flash(key_array[i-num_entries + num_entries/2],
 			   val_array[i]);
 
 	gettimeofday(&t1,NULL);
@@ -502,7 +502,7 @@ static int update_test(uint64_t num_entries, int large_keys)
 	printf("Update latency for update test:\t %f \tms\n", timeDiff);
 
 	for (i = 0; i < num_entries/2; i++) {
-		getMapping(key_array[i],
+		get_key_from_flash(key_array[i],
 			   val_array[i + num_entries - num_entries/2]);
 	}
 
