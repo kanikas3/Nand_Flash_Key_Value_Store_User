@@ -125,7 +125,8 @@ static double get_latency(struct timeval t0,
  *
  * @return 0 for success, -1 on failure
  */
-static int read_write_test(uint64_t num_entries, int large_keys)
+static int read_write_test(uint64_t num_entries, int large_keys,
+			   int write, int read)
 {
 	uint64_t i;
 	int j;
@@ -185,12 +186,14 @@ static int read_write_test(uint64_t num_entries, int large_keys)
 		}
 	}
 
-	ret = kvlib_format();
-	if (ret == 0)
-		printf("Formatting done successfully\n");
-	else {
-		printf("Error in formatting the flash\n");
-		goto fail;
+	if (write) {
+		ret = kvlib_format();
+		if (ret == 0)
+			printf("Formatting done successfully\n");
+		else {
+			printf("Error in formatting the flash\n");
+			goto fail;
+		}
 	}
 
 	if (large_keys) {
@@ -231,25 +234,31 @@ static int read_write_test(uint64_t num_entries, int large_keys)
 		}
 	}
 
-	gettimeofday(&t0,NULL);
+	if (write) {
+		gettimeofday(&t0,NULL);
 
-	for (i = 0; i < num_entries; i++)
-		set_key_to_flash(key_array[i], val_array[i]);
+		for (i = 0; i < num_entries; i++)
+			set_key_to_flash(key_array[i], val_array[i]);
 
-	gettimeofday(&t1,NULL);
+		gettimeofday(&t1,NULL);
 
-	timeDiff = get_latency(t0,t1, num_entries);
-	printf("Write latency for read-write test:\t %f \tms\n", timeDiff);
-
-	gettimeofday(&t0,NULL);
-
-	for (i=0; i < num_entries; i++) {
-		get_key_from_flash(key_array[i], val_array[i]);
+		timeDiff = get_latency(t0,t1, num_entries);
+		printf("Write latency for read-write test:\t %f \tms\n",
+		       timeDiff);
 	}
 
-	gettimeofday(&t1,NULL);
-	timeDiff = get_latency(t0,t1, num_entries);
-	printf("Read latency for read-write test:\t %f \tms \n", timeDiff);
+	if (read) {
+		gettimeofday(&t0,NULL);
+
+		for (i=0; i < num_entries; i++) {
+			get_key_from_flash(key_array[i], val_array[i]);
+		}
+
+		gettimeofday(&t1,NULL);
+		timeDiff = get_latency(t0,t1, num_entries);
+		printf("Read latency for read-write test:\t %f \tms \n",
+		       timeDiff);
+	}
 
 	return 0;
 fail:
@@ -615,6 +624,8 @@ static void print_help(void) {
 	printf("	1 for read/write latency test\n");
 	printf("	2 for delete keys test\n");
 	printf("	3 for updating keys/values test\n");
+	printf("	5 for writing keys\n");
+	printf("	6 for reading keys\n");
 
 	printf("Arg2:	Number of pages to be tested\n");
 
@@ -639,7 +650,7 @@ int main(int argc, char *argv[])
 	{
 		case 1:
 			printf("\nRead-Write Latency test\n");
-			read_write_test(entries, large_page);
+			read_write_test(entries, large_page, 1, 1);
 			break;
 		case 2:
 			printf("\nDelete test\n");
@@ -648,6 +659,14 @@ int main(int argc, char *argv[])
 		case 3:
 			printf("\nUpdate test\n");
 			update_test(entries, large_page);
+			break;
+		case 5:
+			printf("\nWrite Latency test\n");
+			read_write_test(entries, large_page, 1, 0);
+			break;
+		case 6:
+			printf("\nRead Latency test\n");
+			read_write_test(entries, large_page, 0, 1);
 			break;
 		default:
 			print_help();
