@@ -67,7 +67,17 @@ int kvlib_set(const char *key, const char *value)
 
 	/* prepare the keyval structure that will be sent through ioctl */
 	kv.key = (char *)malloc((strlen(key) + 1) * sizeof(char));
+
+	if (!kv.key) {
+		goto fail;
+	}
+
 	kv.val = (char *)malloc((strlen(value) + 1) * sizeof(char));
+
+	if (!kv.val) {
+		goto fail;
+	}
+
 	sprintf(kv.key, "%s", key);
 	sprintf(kv.val, "%s", value);
 
@@ -76,14 +86,17 @@ int kvlib_set(const char *key, const char *value)
 
 	/* send ioctl command */
 	if (ioctl(fd, IOCTL_SET, &kv) != 0) {
-		return -2; /* ioctl error */
+		ret = -2; /* ioctl error */
 	} else if (kv.status == -1) {
 		ret = -3;
 	}
-
+fail:
 	/* cleanup */
-	free(kv.key);
-	free(kv.val);
+	if (kv.key)
+		free(kv.key);
+
+	if (kv.val)
+		free(kv.val);
 
 	/* close virtual device file */
 	close(fd);
@@ -112,19 +125,25 @@ int kvlib_del(const char *key)
 
 	/* prepare the keyval structure that will be sent through ioctl */
 	kv.key = (char *)malloc((strlen(key) + 1) * sizeof(char));
+
+	if (!kv.key) {
+		goto fail;
+	}
+
 	sprintf(kv.key, "%s", key);
 
 	kv.key_len = strlen(key);
 
 	/* send ioctl command */
 	if (ioctl(fd, IOCTL_DEL, &kv) != 0) {
-		return -2; /* ioctl error */
+		ret = -2; /* ioctl error */
 	} else if (kv.status == -1) {
 		ret = -3;
 	}
-
+fail:
 	/* cleanup */
-	free(kv.key);
+	if (kv.key)
+		free(kv.key);
 
 	/* close virtual device file */
 	close(fd);
@@ -152,13 +171,20 @@ int kvlib_get(const char *key, char *value)
 
 	/* peprare the keyval structure we will send through IOCTL */
 	kv.key = (char *)malloc((strlen(key) + 1) * sizeof(char));
+
+	if (!kv.key) {
+		goto fail;
+	}
+
 	kv.val = (char *)malloc(8192); //Maximum allowed value
 	sprintf(kv.key, "%s", key);
 	kv.key_len = strlen(key);
 
 	/* ioctl */
-	if (ioctl(fd, IOCTL_GET, &kv) != 0)
-		return -2; /* ioctl error */
+	if (ioctl(fd, IOCTL_GET, &kv) != 0) {
+		ret = -2; /* ioctl error */
+		goto fail;
+	}
 
 	/* get the value... */
 	sprintf(value, "%s", kv.val);
@@ -166,9 +192,12 @@ int kvlib_get(const char *key, char *value)
 	/* ... and the return code */
 	if (kv.status == -1)
 		ret = -3; /* key not found */
+fail:
+	if (!kv.key)
+		free(kv.key);
 
-	free(kv.key);
-	free(kv.val);
+	if (!kv.val)
+		free(kv.val);
 
 	close(fd);
 
