@@ -1,7 +1,3 @@
-/**
- * Test program using the library to access the storage system
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,12 +6,29 @@
 #include <stdint.h>
 #include "kvlib.h"
 
+/**
+ * @brief Max size of val/key for small key test
+ */
 #define SMALL_TEST_SIZE 128
 
+/**
+ * @brief Max size of val/key for large key test
+ */
 #define LARGE_TEST_SIZE 2048 * 2
 
+/**
+ * @brief Buffer for value comparison on get
+ */
 char buffer[LARGE_TEST_SIZE];
 
+/**
+ * @brief Writes a key value pair to the flash
+ *
+ * @param key Pointer to the key
+ * @param val Pointer to the val
+ *
+ * @return Returns 0 on success or -1 on failure
+ */
 static int set_key_to_flash(char* key, char* val)
 {
 	int ret=0;
@@ -31,6 +44,14 @@ static int set_key_to_flash(char* key, char* val)
 	return 0;
 }
 
+/**
+ * @brief Reads a key value pair from the flash
+ *
+ * @param key Pointer to the key
+ * @param val Pointer to the val
+ *
+ * @return Returns 0 on success or -1 on failure
+ */
 static int get_key_from_flash(char* key, char* val)
 {
 	int ret=0;
@@ -54,6 +75,13 @@ static int get_key_from_flash(char* key, char* val)
 	return 0;
 }
 
+/**
+ * @brief Deletes a key value pair from the flash
+ *
+ * @param key Pointer to the key to be deleted
+ *
+ * @return Returns 0 on success or -1 on failure
+ */
 static int del_key_from_flash(char* key)
 {
 	int ret = 0;
@@ -72,6 +100,15 @@ static int del_key_from_flash(char* key)
 	return 0;
 }
 
+/**
+ * @brief Calculates the time diff between given two timeval
+ *
+ * @param t0 Start time
+ * @param t1 End time
+ * @param num_entries Number of enteries for which this is calculated
+ *
+ * @return the time difference in milliseconds
+ */
 static double get_latency(struct timeval t0,
 			  struct timeval t1, uint64_t num_entries)
 {
@@ -80,6 +117,14 @@ static double get_latency(struct timeval t0,
 	return delta/(1000 * num_entries);
 }
 
+/**
+ * @brief Performs read-write test for large/small keys for given enteries
+ *
+ * @param num_entries Number of pages to be tested
+ * @param large_keys For large keys it is 1, for small keys it is 0
+ *
+ * @return 0 for success, -1 on failure
+ */
 static int read_write_test(uint64_t num_entries, int large_keys)
 {
 	uint64_t i;
@@ -93,6 +138,9 @@ static int read_write_test(uint64_t num_entries, int large_keys)
 	int val_size;
 	int threshold;
 
+	/* Divide the num_enteries by 4 in large key as max key/val can be 3
+	 * pages.
+	 */
 	if (large_keys) {
 		printf("Performing Large key(3 pages) read-write test for %lu pages \n",
 		       num_entries);
@@ -146,6 +194,7 @@ static int read_write_test(uint64_t num_entries, int large_keys)
 	}
 
 	if (large_keys) {
+		/* Generates unique large keys and values */
 		threshold = LARGE_TEST_SIZE / 16;
 		for (i = 0; i < num_entries; i++)
 		{
@@ -226,6 +275,14 @@ fail:
 	return -1;
 }
 
+/**
+ * @brief Performs delete test for large/small keys for given enteries
+ *
+ * @param num_entries Number of pages to be tested
+ * @param large_keys For large keys it is 1, for small keys it is 0
+ *
+ * @return 0 for success, -1 on failure
+ */
 static int delete_test(uint64_t num_entries, int large_keys)
 {
 	uint64_t i;
@@ -238,6 +295,9 @@ static int delete_test(uint64_t num_entries, int large_keys)
 	int val_size;
 	int threshold;
 
+	/* Divide the num_enteries by 4 in large key as max key/val can be 3
+	 * pages.
+	 */
 	if (large_keys) {
 		printf("Performing Large key(3 pages) delete test for %lu pages \n",
 		       num_entries);
@@ -292,6 +352,7 @@ static int delete_test(uint64_t num_entries, int large_keys)
 
 
 	if (large_keys) {
+		/* Generates unique large keys and values */
 		threshold = LARGE_TEST_SIZE / 16;
 		for (i = 0; i < num_entries; i++)
 		{
@@ -380,6 +441,14 @@ fail:
 	return -1;
 }
 
+/**
+ * @brief Performs update test for large/small keys for given enteries
+ *
+ * @param num_entries Number of pages to be tested
+ * @param large_keys For large keys it is 1, for small keys it is 0
+ *
+ * @return 0 for success, -1 on failure
+ */
 static int update_test(uint64_t num_entries, int large_keys)
 {
 	uint64_t i;
@@ -392,6 +461,9 @@ static int update_test(uint64_t num_entries, int large_keys)
 	int val_size;
 	int threshold;
 
+	/* Divide the num_enteries by 4 in large key as max key/val can be 3
+	 * pages.
+	 */
 	if (large_keys) {
 		printf("Performing Large key(3 pages) update test for %lu pages \n",
 		       num_entries);
@@ -446,6 +518,7 @@ static int update_test(uint64_t num_entries, int large_keys)
 	}
 
 	if (large_keys) {
+		/* Generates unique large keys and values */
 		threshold = LARGE_TEST_SIZE / 16;
 		for (i = 0; i < num_entries; i++)
 		{
@@ -531,14 +604,21 @@ fail:
 	return -1;
 }
 
+/**
+ * @brief Prints the help menu
+ */
 static void print_help(void) {
 	printf("Error: Provide the valid arguments\n");
-	printf("./testbench <key - val size> <number of pages> <key_size>\n");
-	printf("key_size is 1 for large_pages and 0 for small_pages\n");
-	printf("For Choose key - val size options as below\n");
-	printf("1 for read/write latency test\n");
-	printf("2 for delete keys test\n");
-	printf("3 for updating keys/values test\n");
+	printf("./testbench <test_name> <number of pages> <is_large_key>\n");
+
+	printf("Arg1:\n");
+	printf("	1 for read/write latency test\n");
+	printf("	2 for delete keys test\n");
+	printf("	3 for updating keys/values test\n");
+
+	printf("Arg2:	Number of pages to be tested\n");
+
+	printf("Arg3:	1 for large keys, 0 for small keys\n");
 }
 
 int main(int argc, char *argv[])

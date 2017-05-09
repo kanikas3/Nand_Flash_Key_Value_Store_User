@@ -52,11 +52,7 @@ int kvlib_format()
  * 0 on success
  * -1 on error when opening the virtual device file
  * -2 on IOCTL error
- * -3 if size(key + value) > flash page size
- * -4 when trying to set an already existing key
- * -5 when the storage system is in read-only mode
- * -6 on MTD write error
- * -7 on userspace/kernel space memory transfer error
+ * -3 if key/val set operation failed
  */
 int kvlib_set(const char *key, const char *value)
 {
@@ -68,7 +64,7 @@ int kvlib_set(const char *key, const char *value)
 	fd = open(DEVICE_NAME, 0);
 	if (fd < 0)
 		return -1;
-	
+
 	/* prepare the keyval structure that will be sent through ioctl */
 	kv.key = (char *)malloc((strlen(key) + 1) * sizeof(char));
 	kv.val = (char *)malloc((strlen(value) + 1) * sizeof(char));
@@ -81,17 +77,8 @@ int kvlib_set(const char *key, const char *value)
 	/* send ioctl command */
 	if (ioctl(fd, IOCTL_SET, &kv) != 0) {
 		return -2; /* ioctl error */
-	} else {
-		/* get the return code */
-		if (kv.status == -1) {
-			ret = -3; /* size to write too big */
-		} else if (kv.status == -2) {
-			ret = -4; /* key already exists */
-		} else if (kv.status == -3) {
-			ret = -5; /* system in RO mode */
-		} else if (kv.status == -4) {
-			ret = -6; /* MTD write error */
-		}
+	} else if (kv.status == -1) {
+		ret = -3;
 	}
 
 	/* cleanup */
@@ -104,6 +91,14 @@ int kvlib_set(const char *key, const char *value)
 }
 
 
+/**
+ * Called by a process to delete a key/val pair
+ * Returns:
+ * 0 when ok
+ * -1 on virtual device file open error
+ * -2 on IOCTL error
+ * -3 if delete did not succeed
+ */
 int kvlib_del(const char *key)
 {
 	int fd;
@@ -114,7 +109,7 @@ int kvlib_del(const char *key)
 	fd = open(DEVICE_NAME, 0);
 	if (fd < 0)
 		return -1;
-	
+
 	/* prepare the keyval structure that will be sent through ioctl */
 	kv.key = (char *)malloc((strlen(key) + 1) * sizeof(char));
 	sprintf(kv.key, "%s", key);
@@ -124,17 +119,8 @@ int kvlib_del(const char *key)
 	/* send ioctl command */
 	if (ioctl(fd, IOCTL_DEL, &kv) != 0) {
 		return -2; /* ioctl error */
-	} else {
-		/* get the return code */
-		if (kv.status == -1) {
-			ret = -3; /* size to write too big */
-		} else if (kv.status == -2) {
-			ret = -4; /* key already exists */
-		} else if (kv.status == -3) {
-			ret = -5; /* system in RO mode */
-		} else if (kv.status == -4) {
-			ret = -6; /* MTD write error */
-		}
+	} else if (kv.status == -1) {
+		ret = -3;
 	}
 
 	/* cleanup */
@@ -152,8 +138,6 @@ int kvlib_del(const char *key)
  * -1 on virtual device file open error
  * -2 on IOCTL error
  * -3 if key not found
- * -4 on flash read error
- * -5 on user/kernelspace memory transfer error
  */
 int kvlib_get(const char *key, char *value)
 {
@@ -168,7 +152,7 @@ int kvlib_get(const char *key, char *value)
 
 	/* peprare the keyval structure we will send through IOCTL */
 	kv.key = (char *)malloc((strlen(key) + 1) * sizeof(char));
-	kv.val = (char *)malloc(4096);
+	kv.val = (char *)malloc(8192); //Maximum allowed value
 	sprintf(kv.key, "%s", key);
 	kv.key_len = strlen(key);
 
@@ -182,8 +166,6 @@ int kvlib_get(const char *key, char *value)
 	/* ... and the return code */
 	if (kv.status == -1)
 		ret = -3; /* key not found */
-	else if (kv.status == -2)
-		ret = -4; /* flash read error */
 
 	free(kv.key);
 	free(kv.val);
