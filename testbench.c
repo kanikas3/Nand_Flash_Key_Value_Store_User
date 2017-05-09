@@ -47,7 +47,8 @@ static int get_key_from_flash(char* key, char* val)
 	}
 
 	if(strcmp(buffer, val) != 0) {
-		printf("Error: key %s val got %s expected %s\n", key, buffer, val);
+		printf("Error: key %s val got %s expected %s\n", key,
+		       buffer, val);
 		return -1;
 	}
 	return 0;
