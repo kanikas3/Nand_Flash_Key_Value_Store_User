@@ -22,6 +22,11 @@
 char buffer[LARGE_TEST_SIZE];
 
 /**
+ * @brief If 1 it will print the keys and values
+ */
+int verbose = 0;
+
+/**
  * @brief Writes a key value pair to the flash
  *
  * @param key Pointer to the key
@@ -237,8 +242,14 @@ static int read_write_test(uint64_t num_entries, int large_keys,
 	if (write) {
 		gettimeofday(&t0,NULL);
 
-		for (i = 0; i < num_entries; i++)
+		for (i = 0; i < num_entries; i++) {
 			set_key_to_flash(key_array[i], val_array[i]);
+			if (!ret && verbose) {
+				printf("\nSet key->%s\nSet val->%s\n",
+				       key_array[i],
+				       val_array[i]);
+			}
+		}
 
 		gettimeofday(&t1,NULL);
 
@@ -251,7 +262,12 @@ static int read_write_test(uint64_t num_entries, int large_keys,
 		gettimeofday(&t0,NULL);
 
 		for (i=0; i < num_entries; i++) {
-			get_key_from_flash(key_array[i], val_array[i]);
+			ret = get_key_from_flash(key_array[i], val_array[i]);
+			if (verbose && !ret) {
+				printf("\nGet key->%s\nGet val->%s\n",
+				       key_array[i],
+				       buffer);
+			}
 		}
 
 		gettimeofday(&t1,NULL);
@@ -400,8 +416,14 @@ static int delete_test(uint64_t num_entries, int large_keys)
 
 	gettimeofday(&t0,NULL);
 
-	for (i = 0; i < num_entries; i++)
-		set_key_to_flash(key_array[i], val_array[i]);
+	for (i = 0; i < num_entries; i++) {
+		ret = set_key_to_flash(key_array[i], val_array[i]);
+		if (!ret && verbose) {
+			printf("\nSet key->%s\nSet val->%s\n",
+			       key_array[i],
+			       val_array[i]);
+		}
+	}
 
 	gettimeofday(&t1,NULL);
 
@@ -410,9 +432,13 @@ static int delete_test(uint64_t num_entries, int large_keys)
 
 	gettimeofday(&t0,NULL);
 
-	for (i = 0; i < num_entries; i++)
-		del_key_from_flash(key_array[i]);
+	for (i = 0; i < num_entries; i++) {
+		ret = del_key_from_flash(key_array[i]);
 
+		if (!ret && verbose) {
+			printf("Deleted key->%s\n", key_array[i]);
+		}
+	}
 	gettimeofday(&t1,NULL);
 	timeDiff = get_latency(t0,t1, num_entries);
 	printf("Delete latency for delete test:\t %f \tms\n", timeDiff);
@@ -566,8 +592,14 @@ static int update_test(uint64_t num_entries, int large_keys)
 
 	gettimeofday(&t0,NULL);
 
-	for (i = 0; i <= num_entries/2; i++)
-		set_key_to_flash(key_array[i], val_array[i]);
+	for (i = 0; i <= num_entries/2; i++) {
+		ret = set_key_to_flash(key_array[i], val_array[i]);
+		if (!ret && verbose) {
+			printf("\nSet key->%s\nSet val->%s\n",
+			       key_array[i],
+			       val_array[i]);
+		}
+	}
 
 	gettimeofday(&t1,NULL);
 
@@ -576,17 +608,28 @@ static int update_test(uint64_t num_entries, int large_keys)
 
 	gettimeofday(&t0,NULL);
 
-	for (i = num_entries - num_entries/2; i < num_entries; i++)
-		set_key_to_flash(key_array[i-num_entries + num_entries/2],
+	for (i = num_entries - num_entries/2; i < num_entries; i++) {
+		ret = set_key_to_flash(key_array[i-num_entries + num_entries/2],
 			   val_array[i]);
+		if (!ret && verbose) {
+			printf("\nUpdate key->%s\nUpdate val->%s\n",
+			       key_array[i-num_entries + num_entries/2],
+			       val_array[i]);
+		}
+	}
 
 	gettimeofday(&t1,NULL);
 	timeDiff = get_latency(t0,t1, num_entries - num_entries/2);
 	printf("Update latency for update test:\t %f \tms\n", timeDiff);
 
 	for (i = 0; i < num_entries/2; i++) {
-		get_key_from_flash(key_array[i],
+		ret = get_key_from_flash(key_array[i],
 			   val_array[i + num_entries - num_entries/2]);
+		if (verbose && !ret) {
+			printf("\nGet key->%s\nGet val->%s\n",
+			       key_array[i],
+			       buffer);
+		}
 	}
 
 	return 0;
@@ -618,7 +661,7 @@ fail:
  */
 static void print_help(void) {
 	printf("Error: Provide the valid arguments\n");
-	printf("./testbench <test_name> <number of pages> <is_large_key>\n");
+	printf("./testbench <test_name> <number of pages> <is_large_key> <verbose>\n");
 
 	printf("Arg1:\n");
 	printf("	1 for read/write latency test\n");
@@ -630,13 +673,15 @@ static void print_help(void) {
 	printf("Arg2:	Number of pages to be tested\n");
 
 	printf("Arg3:	1 for large keys, 0 for small keys\n");
+
+	printf("Arg4:	1 for verbose, 0 for silent\n");
 }
 
 int main(int argc, char *argv[])
 {
 	int choice, large_page, entries;
 
-	if(argc != 4)
+	if(argc != 5)
 	{
 		print_help();
 		return -1;
@@ -645,7 +690,7 @@ int main(int argc, char *argv[])
 	choice = atoi(argv[1]);
 	entries = atoi(argv[2]);
 	large_page = atoi(argv[3]);
-
+	verbose = atoi(argv[4]);
 	switch(choice)
 	{
 		case 1:
