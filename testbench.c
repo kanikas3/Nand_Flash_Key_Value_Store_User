@@ -261,11 +261,11 @@ static int read_write_test(uint64_t num_entries, int large_keys,
 	if (read) {
 		gettimeofday(&t0,NULL);
 
-		for (i=0; i < num_entries; i++) {
-			ret = get_key_from_flash(key_array[i], val_array[i]);
+		for (i=num_entries; i != 0; i--) {
+			ret = get_key_from_flash(key_array[i-1], val_array[i-1]);
 			if (verbose && !ret) {
 				printf("\nGet key->%s\nGet val->%s\n",
-				       key_array[i],
+				       key_array[i-1],
 				       buffer);
 			}
 		}
