@@ -12,7 +12,7 @@ testbench: testbench.c kvlib.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 install: all
-	scp -r testbench test.sh short_test.sh launch_flash_simulator.sh $(TARGET)
+	scp -r testbench test.sh short_test.sh large_sample.sh small_sample.sh launch_flash_simulator.sh $(TARGET)
 
 clean:
 	rm -rf *.o testbench

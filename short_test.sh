@@ -1,16 +1,13 @@
 #!/bin/bash
 
 if [ "$#" -ne 3 ]; then
-	echo :"DONOT USE THIS FOR HUGE PAGES, OTHERWISE IT WILL SPAM STDOUT(USE TEST.SH INSTEAD"
 	echo "Illegal number of parameters"
-	echo "./short_test.sh <test_number> <num_pages> <is_large_key>"
+	echo "./short_test.sh <test_number> <is_large_key>"
 	echo "test_number: "
 	echo "    1 for read-write test"
 	echo "    2 for delete test"
 	echo "    3 for update test"
 	echo "    4 for remount test"
-	echo "num_pages: "
-	echo "    count of the number of pages"
 	echo "is_large_key: "
 	echo "    1 for key/val more than page size"
 	echo "    0 for key/val less than page size"
