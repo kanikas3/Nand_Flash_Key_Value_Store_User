@@ -1,5 +1,5 @@
 #!/bin/bash
-
+dmesg -n1
 if [ "$#" -ne 3 ]; then
 	echo "Illegal number of parameters"
 	echo "./short_test.sh <test_number> <is_large_key>"
@@ -36,3 +36,4 @@ if [ "$1" -eq 4 ]; then
 fi
 
 echo "#################################################"
+dmesg -n7
