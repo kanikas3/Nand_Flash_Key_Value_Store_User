@@ -40,6 +40,7 @@ fi
 if [ "$1" -eq 4 ]; then
 	./testbench 5 $value $3 0
 	./insert_mod.sh
+	echo "######## Remounting the NandFlash without formatting ########"
 	./testbench 6 $value $3 0
 fi
 
